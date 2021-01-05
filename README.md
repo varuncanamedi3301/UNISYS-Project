@@ -16,3 +16,7 @@ Edge driven, IoT based, intelligent system for restricted access control for com
 3. Pi camera module 
 4. USB power supply for Raspberry Pi
 5. Breadboard (for prototyping purposes)
+
+## Basic Overview :-
+
+In this system, we will be using a standard MQTT protocol over the local WiFi network to establish communication between devices. The goal of the system would be to provide accurate identification and access, with minimal usage of confidential biometric data. To achieve this we will be using HOG(Histogram of Oriented Graphs) features generated at the sensor level as input to the neural network image recognition algorithm. The descision given by the algorithm will be transmitted to the all the gate control systems. 
