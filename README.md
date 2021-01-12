@@ -16,6 +16,8 @@ Edge driven, IoT based, intelligent system for restricted access control in comm
 3. Pi camera module 
 4. USB power supply for Raspberry Pi
 5. Breadboard (for prototyping purposes)
+6. LED lights
+7. 220 ohm resistors
 
 ## Basic Overview :-
 
