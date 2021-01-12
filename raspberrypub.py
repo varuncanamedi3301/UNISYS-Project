@@ -9,11 +9,13 @@ import math
 import paho.mqtt.client as mqtt
 import os
 
-
+ledpin = 12
 IO.setwarnings(False)
 IO.setmode(IO.BCM)
 IO.setup(22,IO.IN) #GPIO 14 for IR sensor input
+IO.setup(12,IO.OUT) # led pin(for led controls)
 camera = picamera.PiCamera() 
+
 
 
 
@@ -118,9 +120,22 @@ vector = hog.extract()
 
 
 broker_address=""
-client = mqtt.Client("P1")
+
+client = mqtt.Client("pub1")
 client.connect(broker_address)
-client.publish("building/camera/camera1", vector)
-
-
+client.publish("camera/camera1", vector)
 os.remove('/home/pi/Desktop/picture/imag.jpg')
+
+def message_func(message, userdata, client):
+	topic = str(message.topic)
+	message = int(message.payload.decode("utf-8"))
+	if message == 0 :
+		GPIO.output(ledpin, GPIO.LOW)
+		time.sleep(0.5)
+	else:
+		GPIO.output(ledpin, GPIO.HIGH)
+		time.sleep(0.5)
+
+client.subscribe("gatecommand/gate1")
+client.on_message = messageFunction
+client.loop_start()	
