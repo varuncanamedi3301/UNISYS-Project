@@ -1,4 +1,4 @@
-import RPi.GPIO as IO
+import RPi.GPIO as IO # calling all libraries
 import time
 import picamera
 from time import sleep
@@ -9,24 +9,69 @@ import math
 import paho.mqtt.client as mqtt
 import os
 
-ledpin = 12
 IO.setwarnings(False)
-IO.setmode(IO.BCM)
-IO.setup(22,IO.IN) #GPIO 14 for IR sensor input
-IO.setup(12,IO.OUT) # led pin(for led controls)
-camera = picamera.PiCamera() 
+IO.setmode(IO.BOARD)
+IO.setup(14,IO.IN) #GPIO 14 for IR sensor input
+IO.setup(12,IO.OUT) # led pin 12 (for led controls)
+camera = picamera.PiCamera() # initializing the raspberry pi camera module
 
+broker = ''
+port = 
+publish_topic = "Gate1/camera"
+subscribe_topic = "server/message1"
+client_id = f'python-mqtt-{random.randint(0, 1000)}'
+username = ''
+password = ''
 
+def capture_photo():
+    """ Capture image to 
+    file new_image.jpg
+    """
+    camera.start_preview()
+    sleep(5)
+    camera.capture('/home/pi/python_code/capture/new_image.jpg')
+    camera.stop_preview()     
 
+def delete_photo():
+    """ delete photo after 
+    the program has been executed
+    """
+    if os.path.exists("/home/pi/python_code/capture/new_image.jpg"):
+        os.remove("/home/pi/python_code/capture/new_image.jpg")
+    else:
+        print("file does not exist")
 
-while(1):
-    if(IO.setup(22,IO.IN) == False): # Person comes near the gate -> sensor input high
-        camera.start_preview()
-        sleep(5)
-        camera.capture('/home/pi/Desktop/picture/imag.jpg') #camera module takes picture and saves it to memory
-        camera.stop_preview()     
-
-
+def connect_mqtt():
+    """ connects to mqtt server and establishes connection 
+    between the broker and client"""
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            print("Connected to MQTT Broker!")
+        else:
+            print("Failed to connect, return code %d\n", rc)
+        client = mqtt_client.Client(client_id)
+        client.username_pw_set(username, password)
+        client.on_connect = on_connect
+        client.connect(broker, port)
+        return client 
+    
+def publish(client, msg, tpc):
+    """publish hog vector onto 
+    the mqtt architeture with paho
+    mqtt library"""
+    msg_new = msg.tobytes()
+    client.publish(tpc, msg)
+    
+def subscribe(client, topic):
+    """recieve message from server """
+    def on_message(client, userdata, msg):
+        pl = msg.payload.decode()
+        if pl == 'open':
+            GPIO.output(12, GPIO.HIGH)
+        else:
+            GPIO.output(12, GPIO.LOW)
+    client.subscribe(topic)
+    client.on_message = on_message
 
 class Hog_descriptor():
     def __init__(self, img, cell_size=16, bin_size=8):
@@ -113,29 +158,24 @@ class Hog_descriptor():
                     angle += angle_gap
         return image
 
+def HOG_extract():
+    """extract HOG features usin the hog_descripter class
+    defined above, returns list of hog features"""
+    img = cv2.imread('/home/pi/python_code/capture/new_image.jpg', cv2.IMREAD_GRAYSCALE)
+    hog = Hog_descriptor(img, cell_size=4, bin_size=4)
+    vector = hog.extract()
+    return vector
 
-img = cv2.imread('/home/pi/Desktop/picture/imag.jpg', cv2.IMREAD_GRAYSCALE)
-hog = Hog_descriptor(img, cell_size=4, bin_size=4)
-vector = hog.extract()
-
-
-broker_address=""
-
-client = mqtt.Client("pub1")
-client.connect(broker_address)
-client.publish("camera/camera1", vector)
-os.remove('/home/pi/Desktop/picture/imag.jpg')
-
-def message_func(message, userdata, client):
-	topic = str(message.topic)
-	message = int(message.payload.decode("utf-8"))
-	if message == 0 :
-		GPIO.output(ledpin, GPIO.LOW)
-		time.sleep(0.5)
-	else:
-		GPIO.output(ledpin, GPIO.HIGH)
-		time.sleep(0.5)
-
-client.subscribe("gatecommand/gate1")
-client.on_message = messageFunction
-client.loop_start()	
+while True:
+    i = GPIO.input(14)
+    if i==1:
+        print('motion detected')
+        capture_photo()
+        sleep(1)
+        hog_vctr = HOG_extract()
+        client = connect_mqtt()
+        client.loop_start()
+        publish(client, hog_vctr, publish_topic)
+        sleep(5)
+        delete_photo()
+        subscribe(client, subscribe_topic)
