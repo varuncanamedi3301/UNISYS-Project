@@ -162,7 +162,8 @@ def HOG_extract():
     """extract HOG features usin the hog_descripter class
     defined above, returns list of hog features"""
     img = cv2.imread('/home/pi/python_code/capture/new_image.jpg', cv2.IMREAD_GRAYSCALE)
-    hog = Hog_descriptor(img, cell_size=4, bin_size=4)
+    resize_image = cv2.resize(img, (1050, 1610))
+    hog = Hog_descriptor(resize_image, cell_size=4, bin_size=4)
     vector = hog.extract()
     return vector
 
