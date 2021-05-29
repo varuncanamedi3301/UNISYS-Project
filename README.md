@@ -1,5 +1,5 @@
-# UNISYS-Project
-Edge driven, IoT based, intelligent system for restricted access control in commercial establishments. This project is a part of UNISYS student innovation program. Developed by students of BMSCE, Bengaluru.
+# Edge-driven Biometrics and Facial Recognition
+Edge driven, IoT based, intelligent system for restricted access control in commercial establishments. This project is a part of UNISYS cloud 20/20 contest. Developed by students of BMSCE, Bengaluru.
 
 
 ## Libraries and languages used :-
